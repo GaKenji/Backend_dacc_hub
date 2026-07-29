@@ -3,6 +3,9 @@ package com.dacchub.backend.game.entity;
 import com.dacchub.backend.common.enums.Engine;
 import com.dacchub.backend.common.enums.GameMode;
 import com.dacchub.backend.common.enums.License;
+import com.dacchub.backend.course.entity.Course;
+import com.dacchub.backend.institution.entity.Institution;
+import com.dacchub.backend.user.entity.User;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -82,8 +85,15 @@ public class Game {
 
     private LocalDateTime createdAt;
 
-    //Chaves estrangeiras a serem implementadas, esperar modelagem de usuário, instituição e cursos
-    private UUID userId;
-    private UUID institutionId;
-    private UUID courseId;
+    @ManyToOne//Seta uma referencia para a entidade user
+    @JoinColumn(name = "user_id")//Seta nome da coluna que armazenará a chave primária de outra tabela
+    private User userId;
+
+    @ManyToOne
+    @JoinColumn(name = "institution_id")
+    private Institution institutionId;
+
+    @ManyToOne
+    @JoinColumn(name = "course_id")
+    private Course courseId;
 }
