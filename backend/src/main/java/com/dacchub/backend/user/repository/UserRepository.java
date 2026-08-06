@@ -9,7 +9,7 @@ import com.dacchub.backend.user.entity.User;
 
 @Repository
 public interface UserRepository extends JpaRepository<User, UUID> {
-  User findByName(String name);
+  User findByEmail(String email);
 
-  boolean existsByUsername(String name);
+  boolean existsByEmail(String email);
 }

@@ -8,6 +8,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.dacchub.backend.auth.dto.UserLoginDto;
+import com.dacchub.backend.auth.dto.UserRegisterDto;
 import com.dacchub.backend.auth.util.JwtUtil;
 import com.dacchub.backend.user.entity.User;
 import com.dacchub.backend.user.repository.UserRepository;
@@ -23,13 +24,20 @@ public class AuthService {
 
   private JwtUtil jwtUtil;
 
-  public String register(User user) {
-    if (userRepository.existsByUsername(user.getName())) {
+  public String register(UserRegisterDto dto) {
+    if (userRepository.existsByEmail(dto.email())) {
       throw new IllegalArgumentException("Email already exists");
     }
 
-    user.setPassword(passwordEncoder.encode(user.getPassword()));
-
+    User user = new User();
+    user.setName(dto.name());
+    user.setEmail(dto.email());
+    user.setPassword(passwordEncoder.encode(dto.password()));
+    user.setAvatarUrl(dto.avatarUrl());
+    user.setBio(dto.bio());
+    user.setGithubUrl(dto.githubUrl());
+    user.setLinkedinUrl(dto.linkedinUrl());
+    user.setPortfolioUrl(dto.portfolioUrl());
     userRepository.save(user);
 
     return jwtUtil.generateToken(user.getEmail());
