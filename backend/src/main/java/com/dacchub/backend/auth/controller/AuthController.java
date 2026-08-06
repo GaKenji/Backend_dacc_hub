@@ -10,7 +10,6 @@ import org.springframework.web.bind.annotation.RestController;
 import com.dacchub.backend.auth.dto.UserLoginDto;
 import com.dacchub.backend.auth.dto.UserRegisterDto;
 import com.dacchub.backend.auth.service.AuthService;
-import com.dacchub.backend.user.entity.User;
 
 @RestController
 @RequestMapping("/api/v1")

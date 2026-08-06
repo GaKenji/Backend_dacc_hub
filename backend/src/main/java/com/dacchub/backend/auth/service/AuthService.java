@@ -10,6 +10,8 @@ import org.springframework.stereotype.Service;
 import com.dacchub.backend.auth.dto.UserLoginDto;
 import com.dacchub.backend.auth.dto.UserRegisterDto;
 import com.dacchub.backend.auth.util.JwtUtil;
+import com.dacchub.backend.course.entity.Course;
+import com.dacchub.backend.course.repository.CourseRepository;
 import com.dacchub.backend.user.entity.User;
 import com.dacchub.backend.user.repository.UserRepository;
 
@@ -23,6 +25,8 @@ public class AuthService {
   private AuthenticationManager authenticationManager;
 
   private JwtUtil jwtUtil;
+
+  private CourseRepository courseRepository;
 
   public String register(UserRegisterDto dto) {
     if (userRepository.existsByEmail(dto.email())) {
@@ -39,6 +43,12 @@ public class AuthService {
     user.setLinkedinUrl(dto.linkedinUrl());
     user.setPortfolioUrl(dto.portfolioUrl());
     userRepository.save(user);
+
+    if (dto.courseId() != null) {
+      Course course = courseRepository.findById(dto.courseId())
+          .orElseThrow(() -> new IllegalArgumentException("Course not found"));
+      user.setCourse(course);
+    }
 
     return jwtUtil.generateToken(user.getEmail());
   }
