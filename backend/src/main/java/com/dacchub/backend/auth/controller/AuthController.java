@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.dacchub.backend.auth.dto.UserLoginDto;
+import com.dacchub.backend.auth.dto.UserRegisterDto;
 import com.dacchub.backend.auth.service.AuthService;
 import com.dacchub.backend.user.entity.User;
 
@@ -27,7 +28,7 @@ public class AuthController {
   }
 
   @PostMapping("/signup")
-  private ResponseEntity<String> register(@RequestBody User user) {
+  private ResponseEntity<String> register(@RequestBody UserRegisterDto user) {
 
     try {
       return ResponseEntity.ok(authService.register(user));
