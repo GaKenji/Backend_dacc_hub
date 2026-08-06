@@ -28,6 +28,15 @@ public class AuthService {
 
   private CourseRepository courseRepository;
 
+  public AuthService(PasswordEncoder passwordEncoder, UserRepository userRepository,
+      AuthenticationManager authenticationManager, JwtUtil jwtUtil, CourseRepository courseRepository) {
+    this.passwordEncoder = passwordEncoder;
+    this.userRepository = userRepository;
+    this.authenticationManager = authenticationManager;
+    this.jwtUtil = jwtUtil;
+    this.courseRepository = courseRepository;
+  }
+
   public String register(UserRegisterDto dto) {
     if (userRepository.existsByEmail(dto.email())) {
       throw new IllegalArgumentException("Email already exists");

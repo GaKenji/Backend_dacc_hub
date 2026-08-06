@@ -1,5 +1,7 @@
 package com.dacchub.backend.auth.controller;
 
+import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -11,28 +13,34 @@ import com.dacchub.backend.auth.dto.UserLoginDto;
 import com.dacchub.backend.auth.dto.UserRegisterDto;
 import com.dacchub.backend.auth.service.AuthService;
 
+import jakarta.validation.Valid;
+
 @RestController
-@RequestMapping("/api/v1")
+@RequestMapping("/api/v1/auth")
 public class AuthController {
 
   private AuthService authService;
 
+  public AuthController(AuthService authService) {
+    this.authService = authService;
+  }
+
   @PostMapping("/login")
-  private ResponseEntity<String> login(@RequestBody UserLoginDto user) {
+  public ResponseEntity<String> login(@Valid @RequestBody UserLoginDto user) {
     try {
       return ResponseEntity.ok(authService.login(user));
     } catch (AuthenticationException e) {
-      return ResponseEntity.status(401).body(e.getMessage());
+      return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(e.getMessage());
     }
   }
 
   @PostMapping("/signup")
-  private ResponseEntity<String> register(@RequestBody UserRegisterDto user) {
+  public ResponseEntity<String> register(@Valid @RequestBody UserRegisterDto user) {
 
     try {
-      return ResponseEntity.ok(authService.register(user));
+      return ResponseEntity.status(HttpStatus.CREATED).body(authService.register(user));
     } catch (IllegalArgumentException e) {
-      return ResponseEntity.status(401).body(e.getMessage());
+      return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
     }
 
   }
