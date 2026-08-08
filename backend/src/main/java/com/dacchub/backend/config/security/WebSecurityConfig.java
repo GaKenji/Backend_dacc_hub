@@ -13,20 +13,16 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 import com.dacchub.backend.auth.security.AuthEntryPointJwt;
 import com.dacchub.backend.auth.security.AuthTokenFilter;
-import com.dacchub.backend.auth.security.CustomUserDetailsService;
 
 @Configuration
 public class WebSecurityConfig {
-
-  private CustomUserDetailsService userDetailsService;
 
   private AuthEntryPointJwt unauthorizedHandler;
 
   private AuthTokenFilter authTokenFilter;
 
-  public WebSecurityConfig(CustomUserDetailsService userDetailsService, AuthEntryPointJwt unauthorizedHandler,
+  public WebSecurityConfig(AuthEntryPointJwt unauthorizedHandler,
       AuthTokenFilter authTokenFilter) {
-    this.userDetailsService = userDetailsService;
     this.unauthorizedHandler = unauthorizedHandler;
     this.authTokenFilter = authTokenFilter;
   }
