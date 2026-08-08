@@ -43,6 +43,11 @@ public class AuthService {
     }
 
     User user = new User();
+    if (dto.courseId() != null) {
+      Course course = courseRepository.findById(dto.courseId())
+          .orElseThrow(() -> new IllegalArgumentException("Course not found"));
+      user.setCourse(course);
+    }
     user.setName(dto.name());
     user.setEmail(dto.email());
     user.setPassword(passwordEncoder.encode(dto.password()));
@@ -51,13 +56,8 @@ public class AuthService {
     user.setGithubUrl(dto.githubUrl());
     user.setLinkedinUrl(dto.linkedinUrl());
     user.setPortfolioUrl(dto.portfolioUrl());
-    userRepository.save(user);
 
-    if (dto.courseId() != null) {
-      Course course = courseRepository.findById(dto.courseId())
-          .orElseThrow(() -> new IllegalArgumentException("Course not found"));
-      user.setCourse(course);
-    }
+    userRepository.save(user);
 
     return jwtUtil.generateToken(user.getEmail());
   }
