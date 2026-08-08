@@ -1,9 +1,11 @@
 package com.dacchub.backend.auth.security;
 
 import java.io.IOException;
+import java.util.Collections;
 
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
@@ -25,11 +27,8 @@ public class AuthTokenFilter extends OncePerRequestFilter {
 
   private JwtUtil jwtUtil;
 
-  private CustomUserDetailsService userDetailsService;
-
-  public AuthTokenFilter(JwtUtil jwtUtil, CustomUserDetailsService userDetailsService) {
+  public AuthTokenFilter(JwtUtil jwtUtil) {
     this.jwtUtil = jwtUtil;
-    this.userDetailsService = userDetailsService;
   }
 
   @Override
@@ -39,8 +38,11 @@ public class AuthTokenFilter extends OncePerRequestFilter {
       String jwt = parseJwt(request);
 
       if (jwt != null && jwtUtil.validateJwtToken(jwt)) {
-        final String username = jwtUtil.getUserFromToken(jwt);
-        final UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+        final String email = jwtUtil.getUserFromToken(jwt);
+        final UserDetails userDetails = new User(
+            email,
+            "",
+            Collections.emptyList());
 
         UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(
             userDetails,
