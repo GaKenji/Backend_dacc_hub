@@ -15,6 +15,9 @@ import com.dacchub.backend.course.repository.CourseRepository;
 import com.dacchub.backend.user.entity.User;
 import com.dacchub.backend.user.repository.UserRepository;
 
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
 @Service
 public class AuthService {
 
@@ -59,7 +62,7 @@ public class AuthService {
 
     userRepository.save(user);
 
-    return jwtUtil.generateToken(user.getEmail());
+    return jwtUtil.generateToken(user.getEmail(), "REFRESH");
   }
 
   public String login(UserLoginDto user) {
@@ -68,6 +71,15 @@ public class AuthService {
 
     final UserDetails userDetails = (UserDetails) authentication.getPrincipal();
 
-    return jwtUtil.generateToken(userDetails.getUsername());
+    return jwtUtil.generateToken(userDetails.getUsername(), "REFRESH");
+  }
+
+  public String refreshToken(HttpServletRequest request, HttpServletResponse response) {
+    String refresh = jwtUtil.parseJwt(request);
+
+    if (refresh == null && !jwtUtil.validateJwtToken(refresh))
+      throw new IllegalArgumentException("Invalid token");
+
+    return jwtUtil.generateToken(jwtUtil.getUserFromToken(refresh), "ACCESS");
   }
 }

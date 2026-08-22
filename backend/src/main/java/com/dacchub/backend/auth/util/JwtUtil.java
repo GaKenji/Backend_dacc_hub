@@ -11,6 +11,7 @@ import org.springframework.stereotype.Component;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 
 @Component
@@ -25,6 +26,8 @@ public class JwtUtil {
 
   private SecretKey key;
 
+  private static final String BEARER = "Bearer ";
+
   public JwtUtil() {
 
   }
@@ -34,10 +37,11 @@ public class JwtUtil {
     this.key = Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8));
   }
 
-  public String generateToken(String username) {
+  public String generateToken(String username, String type) {
     var now = new Date();
 
     return Jwts.builder()
+        .claim("type", type)
         .subject(username)
         .issuedAt(now)
         .expiration(new Date(now.getTime() + jwtExpirationMs))
@@ -61,5 +65,15 @@ public class JwtUtil {
     }
 
     return false;
+  }
+
+  public String parseJwt(HttpServletRequest request) {
+    String headerAuth = request.getHeader("Authorization");
+
+    if (headerAuth != null && headerAuth.startsWith(BEARER)) {
+      return headerAuth.substring(BEARER.length());
+    }
+
+    return null;
   }
 }

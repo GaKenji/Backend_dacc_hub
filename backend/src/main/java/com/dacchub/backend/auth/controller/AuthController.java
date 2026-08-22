@@ -12,6 +12,8 @@ import com.dacchub.backend.auth.dto.UserLoginDto;
 import com.dacchub.backend.auth.dto.UserRegisterDto;
 import com.dacchub.backend.auth.service.AuthService;
 
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 
 @RestController
@@ -44,4 +46,12 @@ public class AuthController {
 
   }
 
+  @PostMapping
+  public ResponseEntity<String> refresh(HttpServletRequest request, HttpServletResponse response) {
+    try {
+      return ResponseEntity.ok(authService.refreshToken(request, response));
+    } catch (AuthenticationException e) {
+      return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(e.getMessage());
+    }
+  }
 }

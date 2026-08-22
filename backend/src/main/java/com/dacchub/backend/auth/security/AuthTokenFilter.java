@@ -23,8 +23,6 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class AuthTokenFilter extends OncePerRequestFilter {
 
-  private static final String BEARER = "Bearer ";
-
   private JwtUtil jwtUtil;
 
   public AuthTokenFilter(JwtUtil jwtUtil) {
@@ -35,7 +33,7 @@ public class AuthTokenFilter extends OncePerRequestFilter {
   protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
       throws ServletException, IOException {
     try {
-      String jwt = parseJwt(request);
+      String jwt = jwtUtil.parseJwt(request);
 
       if (jwt != null && jwtUtil.validateJwtToken(jwt)) {
         final String email = jwtUtil.getUserFromToken(jwt);
@@ -59,13 +57,4 @@ public class AuthTokenFilter extends OncePerRequestFilter {
     filterChain.doFilter(request, response);
   }
 
-  private String parseJwt(HttpServletRequest request) {
-    String headerAuth = request.getHeader("Authorization");
-
-    if (headerAuth != null && headerAuth.startsWith(BEARER)) {
-      return headerAuth.substring(BEARER.length());
-    }
-
-    return null;
-  }
 }
