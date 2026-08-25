@@ -32,68 +32,68 @@ import java.util.UUID;
 public class Game {
     @Id //Define a coluna id como chave primária
     @GeneratedValue(strategy = GenerationType.UUID) //Define o autoIncremento para a chave primária
-    private UUID id;
+    private UUID id; //Identificador único
 
-    private String title;
+    private String title; //Título do jogo
 
-    private String tagline;
-
-    @Column(columnDefinition = "TEXT")
-    private String description;
-
-    private String bannerUrl;
-
-    private String repositoryUrl;
-
-    private String downloadUrl;
-
-    @Enumerated(EnumType.STRING)
-    private Engine engine;
-
-    private String version;
-
-    private String fileSize;
-
-    private LocalDate releaseDate;
-
-    private LocalDateTime updatedAt;
+    private String tagline; //Descrição curta
 
     @Column(columnDefinition = "TEXT")
-    private String minimumRequirements;
+    private String description; //Descrição completa com formatação
 
-    private String academicContext;
+    private String bannerUrl; //URL da arte/banner principal (16:9 ou 2:3)
 
-    @Enumerated(EnumType.STRING)
-    private License license;
+    private String repositoryUrl; //Link GitHub/GitLab
 
-    @ElementCollection
-    private List<String> supportedLanguages;
-
-    @ElementCollection
-    private List<String> genres;
+    private String downloadUrl; //URL do arquivo de download
 
     @Enumerated(EnumType.STRING)
-    private GameMode gameMode;
+    private Engine engine; //Unity | Godot | Unreal | pygame | LibGDX | outro
 
-    private int downloadCount;
+    private String version; //Versão atual (ex.: 1.0.2
 
-    private int viewCount;
+    private String fileSize; //Tamanho do arquivo (ex.: 45 MB)
 
-    private int likeCount;
+    private LocalDate releaseDate; //Data de lançamento
 
-    private boolean featured;
+    private LocalDateTime updatedAt; //Data da última atualização
 
-    private LocalDateTime createdAt;
+    @Column(columnDefinition = "TEXT")
+    private String minimumRequirements; //Requisitos mínimos de sistema (nullable)
+
+    private String academicContext; //Disciplina / semestre / tipo de projeto
+
+    @Enumerated(EnumType.STRING)
+    private License license; //MIT | GPL | Apache | CC-BY | CC-BY-SA | outro
+
+    @ElementCollection
+    private List<String> supportedLanguages; //Idiomas suportados pelo jogo
+
+    @ElementCollection
+    private List<String> genres; //Tags de gênero (Plataforma 2D, Puzzle, RPG…)
+
+    @Enumerated(EnumType.STRING)
+    private GameMode gameMode; //singleplayer | multiplayer | ambos
+
+    private int downloadCount; //Contador público de downloads
+
+    private int viewCount; //Contador de visualizações da página
+
+    private int likeCount; //Contador de curtidas
+
+    private boolean featured; //Curadoria manual de destaque
+
+    private LocalDateTime createdAt; //Data de criação
 
     @ManyToOne//Seta uma referencia para a entidade user
     @JoinColumn(name = "user_id")//Seta nome da coluna que armazenará a chave primária de outra tabela
-    private User userId;
+    private User userId; //Desenvolvedor responsável
 
     @ManyToOne
     @JoinColumn(name = "institution_id")
-    private Institution institutionId;
+    private Institution institutionId; //Derivado via usuario, denormalizado para queries rápidas
 
     @ManyToOne
     @JoinColumn(name = "course_id")
-    private Course courseId;
+    private Course courseId; //Curso associado
 }
