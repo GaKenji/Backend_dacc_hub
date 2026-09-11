@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.dacchub.backend.auth.dto.AuthResponseDto;
 import com.dacchub.backend.auth.dto.UserLoginDto;
 import com.dacchub.backend.auth.dto.UserRegisterDto;
 import com.dacchub.backend.auth.service.AuthService;
@@ -27,30 +28,30 @@ public class AuthController {
   }
 
   @PostMapping("/login")
-  public ResponseEntity<String> login(@Valid @RequestBody UserLoginDto user) {
+  public ResponseEntity<AuthResponseDto> login(@Valid @RequestBody UserLoginDto user) {
     try {
       return ResponseEntity.ok(authService.login(user));
     } catch (AuthenticationException e) {
-      return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(e.getMessage());
+      return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
     }
   }
 
   @PostMapping("/signup")
-  public ResponseEntity<String> register(@Valid @RequestBody UserRegisterDto user) {
+  public ResponseEntity<AuthResponseDto> register(@Valid @RequestBody UserRegisterDto user) {
 
     try {
       return ResponseEntity.status(HttpStatus.CREATED).body(authService.register(user));
     } catch (IllegalArgumentException e) {
-      return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
+      return ResponseEntity.status(HttpStatus.CONFLICT).body(null);
     }
 
   }
 
-  @PostMapping
+  @PostMapping("/refresh")
   public ResponseEntity<String> refresh(HttpServletRequest request, HttpServletResponse response) {
     try {
       return ResponseEntity.ok(authService.refreshToken(request, response));
-    } catch (AuthenticationException e) {
+    } catch (IllegalArgumentException e) {
       return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(e.getMessage());
     }
   }

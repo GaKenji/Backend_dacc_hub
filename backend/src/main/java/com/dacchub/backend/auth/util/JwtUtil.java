@@ -2,6 +2,7 @@ package com.dacchub.backend.auth.util;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
+import java.util.UUID;
 
 import javax.crypto.SecretKey;
 
@@ -24,6 +25,9 @@ public class JwtUtil {
   @Value("${jwt.expiration}")
   private int jwtExpirationMs;
 
+  @Value("${jwt.refresh-expiration}")
+  private long refreshExpiration;
+
   private SecretKey key;
 
   private static final String BEARER = "Bearer ";
@@ -37,14 +41,27 @@ public class JwtUtil {
     this.key = Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8));
   }
 
-  public String generateToken(String username, String type) {
+  public String generateToken(String username) {
     var now = new Date();
 
     return Jwts.builder()
-        .claim("type", type)
+        .claim("type", "ACCESS")
         .subject(username)
         .issuedAt(now)
         .expiration(new Date(now.getTime() + jwtExpirationMs))
+        .signWith(key)
+        .compact();
+  }
+
+  public String generateRefreshToken(String username, UUID uuid) {
+    var now = new Date();
+
+    return Jwts.builder()
+        .claim("type", "REFRESH")
+        .subject(username)
+        .id(uuid.toString())
+        .issuedAt(now)
+        .expiration(new Date(now.getTime() + refreshExpiration))
         .signWith(key)
         .compact();
   }
@@ -54,6 +71,14 @@ public class JwtUtil {
         .parseSignedClaims(token)
         .getPayload()
         .getSubject();
+  }
+
+  public UUID getTokenIdFromToken(String token) {
+    String id = Jwts.parser().verifyWith(key).build()
+        .parseSignedClaims(token)
+        .getPayload()
+        .getId();
+    return UUID.fromString(id);
   }
 
   public boolean validateJwtToken(String token) {
@@ -76,4 +101,12 @@ public class JwtUtil {
 
     return null;
   }
+
+  public String getTokenType(String token) {
+    return Jwts.parser().verifyWith(key).build()
+        .parseSignedClaims(token)
+        .getPayload()
+        .get("type", String.class);
+  }
+
 }

@@ -1,5 +1,9 @@
 package com.dacchub.backend.auth.service;
 
+import java.time.Instant;
+import java.util.UUID;
+
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -7,8 +11,11 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import com.dacchub.backend.auth.dto.AuthResponseDto;
 import com.dacchub.backend.auth.dto.UserLoginDto;
 import com.dacchub.backend.auth.dto.UserRegisterDto;
+import com.dacchub.backend.auth.entity.RefreshToken;
+import com.dacchub.backend.auth.repository.RefreshTokenRepository;
 import com.dacchub.backend.auth.util.JwtUtil;
 import com.dacchub.backend.course.entity.Course;
 import com.dacchub.backend.course.repository.CourseRepository;
@@ -21,6 +28,9 @@ import jakarta.servlet.http.HttpServletResponse;
 @Service
 public class AuthService {
 
+  @Value("${jwt.refresh-expiration}")
+  private long refreshExpiration;
+
   private PasswordEncoder passwordEncoder;
 
   private UserRepository userRepository;
@@ -31,16 +41,20 @@ public class AuthService {
 
   private CourseRepository courseRepository;
 
+  private RefreshTokenRepository refreshTokenRepository;
+
   public AuthService(PasswordEncoder passwordEncoder, UserRepository userRepository,
-      AuthenticationManager authenticationManager, JwtUtil jwtUtil, CourseRepository courseRepository) {
+      AuthenticationManager authenticationManager, JwtUtil jwtUtil, CourseRepository courseRepository,
+      RefreshTokenRepository refreshTokenRepository) {
     this.passwordEncoder = passwordEncoder;
     this.userRepository = userRepository;
     this.authenticationManager = authenticationManager;
     this.jwtUtil = jwtUtil;
     this.courseRepository = courseRepository;
+    this.refreshTokenRepository = refreshTokenRepository;
   }
 
-  public String register(UserRegisterDto dto) {
+  public AuthResponseDto register(UserRegisterDto dto) {
     if (userRepository.existsByEmail(dto.email())) {
       throw new IllegalArgumentException("Email already exists");
     }
@@ -62,24 +76,54 @@ public class AuthService {
 
     userRepository.save(user);
 
-    return jwtUtil.generateToken(user.getEmail(), "REFRESH");
+    String refreshToken = createAndSaveRefreshToken(user);
+
+    return new AuthResponseDto(jwtUtil.generateToken(user.getEmail()), refreshToken);
   }
 
-  public String login(UserLoginDto user) {
+  public AuthResponseDto login(UserLoginDto userDto) {
     Authentication authentication = authenticationManager.authenticate(
-        new UsernamePasswordAuthenticationToken(user.email(), user.password()));
+        new UsernamePasswordAuthenticationToken(userDto.email(), userDto.password()));
 
     final UserDetails userDetails = (UserDetails) authentication.getPrincipal();
 
-    return jwtUtil.generateToken(userDetails.getUsername(), "REFRESH");
+    User user = userRepository.findByEmail(userDetails.getUsername());
+
+    String refreshToken = createAndSaveRefreshToken(user);
+
+    return new AuthResponseDto(jwtUtil.generateToken(user.getEmail()), refreshToken);
   }
 
   public String refreshToken(HttpServletRequest request, HttpServletResponse response) {
     String refresh = jwtUtil.parseJwt(request);
 
-    if (refresh == null && !jwtUtil.validateJwtToken(refresh))
+    if (refresh == null || !jwtUtil.validateJwtToken(refresh) || !"REFRESH".equals(jwtUtil.getTokenType(refresh)))
       throw new IllegalArgumentException("Invalid token");
 
-    return jwtUtil.generateToken(jwtUtil.getUserFromToken(refresh), "ACCESS");
+    RefreshToken token = refreshTokenRepository.findById(jwtUtil.getTokenIdFromToken(refresh))
+        .orElseThrow(() -> new IllegalArgumentException("Invalid token"));
+
+    if (token.isLoggedOut() || token.getExpiresAt() == null || token.getExpiresAt().isBefore(Instant.now())) {
+      throw new IllegalArgumentException("Expired token");
+    }
+
+    return jwtUtil.generateToken(jwtUtil.getUserFromToken(refresh));
   }
+
+  private String createAndSaveRefreshToken(User user) {
+    UUID tokenId = UUID.randomUUID();
+    String tokenString = jwtUtil.generateRefreshToken(user.getEmail(),
+        tokenId);
+
+    RefreshToken refreshToken = new RefreshToken();
+    refreshToken.setId(tokenId);
+    refreshToken.setUser(user);
+    refreshToken.setToken(tokenString);
+    refreshToken.setExpiresAt(Instant.now().plusMillis(refreshExpiration));
+    refreshToken.setLoggedOut(false);
+
+    refreshTokenRepository.save(refreshToken);
+    return tokenString;
+  }
+
 }
