@@ -10,6 +10,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.dacchub.backend.auth.dto.AuthResponseDto;
 import com.dacchub.backend.auth.dto.UserLoginDto;
@@ -108,6 +109,52 @@ public class AuthService {
     }
 
     return jwtUtil.generateToken(jwtUtil.getUserFromToken(refresh));
+  }
+
+  public String logout(HttpServletRequest request, HttpServletResponse response) {
+    String refresh = jwtUtil.parseJwt(request);
+
+    if (refresh == null || !jwtUtil.validateJwtToken(refresh) || !"REFRESH".equals(jwtUtil.getTokenType(refresh))) {
+      throw new IllegalArgumentException("Invalid token");
+    }
+
+    RefreshToken token = refreshTokenRepository.findById(jwtUtil.getTokenIdFromToken(refresh))
+        .orElseThrow(() -> new IllegalArgumentException("Invalid token"));
+
+    if (token.isLoggedOut()) {
+      throw new IllegalArgumentException("Already logged out");
+    }
+
+    token.setLoggedOut(true);
+    refreshTokenRepository.save(token);
+
+    return "Logged out";
+  }
+
+  @Transactional
+  public String logoutAll(HttpServletRequest request, HttpServletResponse response) {
+    String userEmail = null;
+
+    if (request.getUserPrincipal() != null) {
+      userEmail = request.getUserPrincipal().getName();
+    } else {
+      String token = jwtUtil.parseJwt(request);
+      if (token != null && jwtUtil.validateJwtToken(token)) {
+        userEmail = jwtUtil.getUserFromToken(token);
+      }
+    }
+
+    if (userEmail == null) {
+      throw new IllegalArgumentException("Invalid or missing token");
+    }
+
+    long deletedCount = refreshTokenRepository.revokeAllByUserEmail(userEmail);
+
+    if (deletedCount < 1) {
+      throw new IllegalArgumentException("No active session found");
+    }
+
+    return "Logged out";
   }
 
   private String createAndSaveRefreshToken(User user) {

@@ -55,4 +55,22 @@ public class AuthController {
       return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(e.getMessage());
     }
   }
+
+  @PostMapping("/logout")
+  public ResponseEntity<String> logout(HttpServletRequest request, HttpServletResponse response) {
+    try {
+      return ResponseEntity.ok(authService.logout(request, response));
+    } catch (IllegalArgumentException e) {
+      return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(e.getMessage());
+    }
+  }
+
+  @PostMapping("/logout-all")
+  public ResponseEntity<String> logoutAll(HttpServletRequest request, HttpServletResponse response) {
+    try {
+      return ResponseEntity.ok(authService.logoutAll(request, response));
+    } catch (IllegalArgumentException e) {
+      return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(e.getMessage());
+    }
+  }
 }
