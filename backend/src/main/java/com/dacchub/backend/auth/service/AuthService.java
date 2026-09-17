@@ -133,20 +133,25 @@ public class AuthService {
 
   @Transactional
   public String logoutAll(HttpServletRequest request, HttpServletResponse response) {
-    String userEmail = null;
+    String token = jwtUtil.parseJwt(request);
 
-    if (request.getUserPrincipal() != null) {
-      userEmail = request.getUserPrincipal().getName();
-    } else {
-      String token = jwtUtil.parseJwt(request);
-      if (token != null && jwtUtil.validateJwtToken(token)) {
-        userEmail = jwtUtil.getUserFromToken(token);
-      }
-    }
-
-    if (userEmail == null) {
+    if (token == null || !jwtUtil.validateJwtToken(token)) {
       throw new IllegalArgumentException("Invalid or missing token");
     }
+
+    String tokenType = jwtUtil.getTokenType(token);
+
+    if ("REFRESH".equals(tokenType)) {
+      RefreshToken refreshToken = refreshTokenRepository.findById(jwtUtil.getTokenIdFromToken(token))
+          .orElseThrow(() -> new IllegalArgumentException("Invalid token"));
+
+      if (refreshToken.isLoggedOut()) {
+        throw new IllegalArgumentException("Already logged out");
+      }
+
+    }
+
+    String userEmail = jwtUtil.getUserFromToken(token);
 
     long deletedCount = refreshTokenRepository.revokeAllByUserEmail(userEmail);
 

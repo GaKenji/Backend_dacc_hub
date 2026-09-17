@@ -32,10 +32,6 @@ public class JwtUtil {
 
   private static final String BEARER = "Bearer ";
 
-  public JwtUtil() {
-
-  }
-
   @PostConstruct
   public void init() {
     this.key = Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8));
